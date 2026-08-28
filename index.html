@@ -1,0 +1,124 @@
+```html
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RH Copilot</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      color: #1f2937;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 60px 20px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 42px;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      font-size: 20px;
+      color: #6b7280;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: white;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+    }
+
+    .upload {
+      border: 2px dashed #9ca3af;
+      border-radius: 12px;
+      padding: 40px 20px;
+      margin-bottom: 25px;
+    }
+
+    input[type="file"] {
+      margin-top: 20px;
+    }
+
+    button {
+      background: #111827;
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #374151;
+    }
+
+    #message {
+      margin-top: 25px;
+      color: #4b5563;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>RH Copilot</h1>
+
+    <p class="subtitle">
+      Analyse intelligente des CV pour les professionnels RH
+    </p>
+
+    <div class="card">
+
+      <h2>Analyser un CV</h2>
+
+      <div class="upload">
+        <p>Déposez votre CV PDF ici</p>
+
+        <input type="file" id="cvFile" accept=".pdf">
+
+      </div>
+
+      <button onclick="analyserCV()">
+        ANALYSER LE CV
+      </button>
+
+      <div id="message"></div>
+
+    </div>
+
+  </div>
+
+  <script>
+    function analyserCV() {
+
+      const file = document.getElementById("cvFile").files[0];
+      const message = document.getElementById("message");
+
+      if (!file) {
+        message.innerText = "Veuillez sélectionner un CV PDF.";
+        return;
+      }
+
+      message.innerText =
+        "CV sélectionné : " + file.name +
+        " — L'analyse IA sera disponible dans la prochaine étape.";
+    }
+  </script>
+
+</body>
+</html>
+```
