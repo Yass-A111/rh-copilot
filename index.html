@@ -4,120 +4,304 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RH Copilot</title>
+  <title>RH Copilot - Analyse CV</title>
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #f5f7fb;
-      color: #1f2937;
+      background: #f4f7fb;
+      color: #172033;
+    }
+
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 20px 40px;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .logo span {
+      color: #2563eb;
     }
 
     .container {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 60px 20px;
+      max-width: 1100px;
+      margin: auto;
+      padding: 50px 20px;
+    }
+
+    .hero {
       text-align: center;
-    }
-
-    h1 {
-      font-size: 42px;
-      margin-bottom: 10px;
-    }
-
-    .subtitle {
-      font-size: 20px;
-      color: #6b7280;
       margin-bottom: 40px;
+    }
+
+    .hero h1 {
+      font-size: 42px;
+      margin-bottom: 15px;
+    }
+
+    .hero p {
+      color: #667085;
+      font-size: 18px;
     }
 
     .card {
       background: white;
-      padding: 40px;
-      border-radius: 16px;
-      box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+      border-radius: 18px;
+      padding: 35px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.07);
+      max-width: 750px;
+      margin: auto;
     }
 
-    .upload {
-      border: 2px dashed #9ca3af;
-      border-radius: 12px;
-      padding: 40px 20px;
-      margin-bottom: 25px;
+    .upload-area {
+      border: 2px dashed #cbd5e1;
+      border-radius: 14px;
+      padding: 45px 20px;
+      text-align: center;
+      background: #f8fafc;
+    }
+
+    .upload-icon {
+      font-size: 45px;
+      margin-bottom: 15px;
+    }
+
+    .upload-area h2 {
+      margin-bottom: 8px;
+    }
+
+    .upload-area p {
+      color: #667085;
     }
 
     input[type="file"] {
       margin-top: 20px;
     }
 
-    button {
-      background: #111827;
-      color: white;
+    .button {
+      display: block;
+      width: 100%;
+      margin-top: 25px;
+      padding: 16px;
       border: none;
-      padding: 14px 28px;
-      border-radius: 8px;
-      font-size: 16px;
+      border-radius: 10px;
+      background: #2563eb;
+      color: white;
+      font-size: 17px;
+      font-weight: bold;
       cursor: pointer;
     }
 
-    button:hover {
-      background: #374151;
+    .button:hover {
+      background: #1d4ed8;
     }
 
-    #message {
-      margin-top: 25px;
-      color: #4b5563;
+    #result {
+      display: none;
+      margin-top: 35px;
+    }
+
+    .result-title {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+    }
+
+    .info {
+      background: #f8fafc;
+      padding: 18px;
+      border-radius: 10px;
+    }
+
+    .info strong {
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .skills {
+      margin-top: 20px;
+    }
+
+    .skill {
+      display: inline-block;
+      background: #e8f0ff;
+      color: #1d4ed8;
+      padding: 8px 12px;
+      border-radius: 20px;
+      margin: 5px;
+      font-size: 14px;
+    }
+
+    .warning {
+      margin-top: 20px;
+      padding: 18px;
+      background: #fff7ed;
+      border-radius: 10px;
+    }
+
+    @media (max-width: 700px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero h1 {
+        font-size: 32px;
+      }
+
+      header {
+        padding: 20px;
+      }
     }
   </style>
 </head>
 
 <body>
 
-  <div class="container">
+<header>
+  <div class="logo">
+    RH <span>Copilot</span>
+  </div>
+</header>
 
-    <h1>RH Copilot</h1>
+<div class="container">
 
-    <p class="subtitle">
-      Analyse intelligente des CV pour les professionnels RH
+  <div class="hero">
+    <h1>Analysez vos CV plus rapidement</h1>
+    <p>
+      Un assistant intelligent pour aider les professionnels RH à analyser les candidatures.
     </p>
+  </div>
 
-    <div class="card">
+  <div class="card">
 
-      <h2>Analyser un CV</h2>
+    <div class="upload-area">
 
-      <div class="upload">
-        <p>Déposez votre CV PDF ici</p>
+      <div class="upload-icon">📄</div>
 
-        <input type="file" id="cvFile" accept=".pdf">
+      <h2>Déposer un CV</h2>
+
+      <p>
+        Sélectionnez un fichier PDF pour commencer l'analyse.
+      </p>
+
+      <input type="file" id="cvFile" accept=".pdf">
+
+    </div>
+
+    <button class="button" onclick="analyserCV()">
+      ANALYSER LE CV
+    </button>
+
+    <div id="message"></div>
+
+    <div id="result">
+
+      <h2 class="result-title">Résultat de l'analyse</h2>
+
+      <div class="grid">
+
+        <div class="info">
+          <strong>👤 Candidat</strong>
+          Ahmed Exemple
+        </div>
+
+        <div class="info">
+          <strong>💼 Expérience</strong>
+          6 années
+        </div>
+
+        <div class="info">
+          <strong>🌐 Langues</strong>
+          Français : Bon<br>
+          Anglais : Moyen
+        </div>
+
+        <div class="info">
+          <strong>📊 Score du profil</strong>
+          82 / 100
+        </div>
 
       </div>
 
-      <button onclick="analyserCV()">
-        ANALYSER LE CV
-      </button>
+      <div class="skills">
 
-      <div id="message"></div>
+        <strong>🧠 Compétences</strong>
+
+        <br>
+
+        <span class="skill">Maintenance</span>
+        <span class="skill">Gestion d'équipe</span>
+        <span class="skill">Excel</span>
+        <span class="skill">GMAO</span>
+
+      </div>
+
+      <div class="warning">
+
+        <strong>⚠️ Points à vérifier</strong>
+
+        <p>
+          • Disponibilité du candidat<br>
+          • Mobilité géographique<br>
+          • Prétentions salariales
+        </p>
+
+      </div>
 
     </div>
 
   </div>
 
-  <script>
-    function analyserCV() {
+</div>
 
-      const file = document.getElementById("cvFile").files[0];
-      const message = document.getElementById("message");
+<script>
 
-      if (!file) {
-        message.innerText = "Veuillez sélectionner un CV PDF.";
-        return;
-      }
+function analyserCV() {
 
-      message.innerText =
-        "CV sélectionné : " + file.name +
-        " — L'analyse IA sera disponible dans la prochaine étape.";
-    }
-  </script>
+  const file = document.getElementById("cvFile").files[0];
+
+  const message = document.getElementById("message");
+
+  const result = document.getElementById("result");
+
+  if (!file) {
+
+    message.innerText = "Veuillez sélectionner un CV PDF.";
+
+    message.style.marginTop = "20px";
+
+    return;
+
+  }
+
+  message.innerText = "Analyse du CV en cours...";
+
+  setTimeout(function() {
+
+    message.innerText = "Analyse terminée.";
+
+    result.style.display = "block";
+
+  }, 1000);
+
+}
+
+</script>
 
 </body>
 </html>
