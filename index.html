@@ -6,6 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RH Copilot - Analyse CV</title>
 
+  <!-- PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
   <style>
     * {
       box-sizing: border-box;
@@ -76,14 +79,6 @@
       margin-bottom: 15px;
     }
 
-    .upload-area h2 {
-      margin-bottom: 8px;
-    }
-
-    .upload-area p {
-      color: #667085;
-    }
-
     input[type="file"] {
       margin-top: 20px;
     }
@@ -104,6 +99,12 @@
 
     .button:hover {
       background: #1d4ed8;
+    }
+
+    #message {
+      margin-top: 20px;
+      text-align: center;
+      font-weight: bold;
     }
 
     #result {
@@ -154,6 +155,17 @@
       border-radius: 10px;
     }
 
+    .text-preview {
+      margin-top: 25px;
+      background: #f8fafc;
+      padding: 20px;
+      border-radius: 10px;
+      max-height: 250px;
+      overflow-y: auto;
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
+
     @media (max-width: 700px) {
       .grid {
         grid-template-columns: 1fr;
@@ -182,9 +194,7 @@
 
   <div class="hero">
     <h1>Analysez vos CV plus rapidement</h1>
-    <p>
-      Un assistant intelligent pour aider les professionnels RH à analyser les candidatures.
-    </p>
+    <p>Importez un CV PDF et laissez RH Copilot analyser son contenu.</p>
   </div>
 
   <div class="card">
@@ -195,9 +205,7 @@
 
       <h2>Déposer un CV</h2>
 
-      <p>
-        Sélectionnez un fichier PDF pour commencer l'analyse.
-      </p>
+      <p>Sélectionnez un fichier PDF pour commencer l'analyse.</p>
 
       <input type="file" id="cvFile" accept=".pdf">
 
@@ -217,37 +225,31 @@
 
         <div class="info">
           <strong>👤 Candidat</strong>
-          Ahmed Exemple
+          <span id="candidateName">Non détecté</span>
         </div>
 
         <div class="info">
           <strong>💼 Expérience</strong>
-          6 années
+          <span id="experience">À analyser</span>
         </div>
 
         <div class="info">
           <strong>🌐 Langues</strong>
-          Français : Bon<br>
-          Anglais : Moyen
+          <span id="languages">Non détectées</span>
         </div>
 
         <div class="info">
           <strong>📊 Score du profil</strong>
-          82 / 100
+          <span id="score">Calcul en cours</span>
         </div>
 
       </div>
 
       <div class="skills">
 
-        <strong>🧠 Compétences</strong>
+        <strong>🧠 Compétences détectées</strong>
 
-        <br>
-
-        <span class="skill">Maintenance</span>
-        <span class="skill">Gestion d'équipe</span>
-        <span class="skill">Excel</span>
-        <span class="skill">GMAO</span>
+        <div id="skillsList"></div>
 
       </div>
 
@@ -255,11 +257,17 @@
 
         <strong>⚠️ Points à vérifier</strong>
 
-        <p>
-          • Disponibilité du candidat<br>
-          • Mobilité géographique<br>
-          • Prétentions salariales
+        <p id="checks">
+          Analyse en cours...
         </p>
+
+      </div>
+
+      <div class="text-preview">
+
+        <strong>📄 Texte extrait du CV :</strong>
+
+        <div id="pdfText"></div>
 
       </div>
 
@@ -271,33 +279,244 @@
 
 <script>
 
-function analyserCV() {
+async function analyserCV() {
 
   const file = document.getElementById("cvFile").files[0];
 
   const message = document.getElementById("message");
-
   const result = document.getElementById("result");
 
   if (!file) {
-
     message.innerText = "Veuillez sélectionner un CV PDF.";
-
-    message.style.marginTop = "20px";
-
     return;
-
   }
 
-  message.innerText = "Analyse du CV en cours...";
+  if (file.type !== "application/pdf") {
+    message.innerText = "Veuillez sélectionner un fichier PDF valide.";
+    return;
+  }
 
-  setTimeout(function() {
+  message.innerText = "Lecture du CV en cours...";
 
-    message.innerText = "Analyse terminée.";
+  try {
+
+    const arrayBuffer = await file.arrayBuffer();
+
+    const pdf = await pdfjsLib.getDocument({
+      data: arrayBuffer
+    }).promise;
+
+    let fullText = "";
+
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+
+      const page = await pdf.getPage(pageNumber);
+
+      const content = await page.getTextContent();
+
+      const pageText = content.items
+        .map(item => item.str)
+        .join(" ");
+
+      fullText += pageText + "\n\n";
+
+    }
+
+    document.getElementById("pdfText").innerText = fullText;
+
+    analyserInformations(fullText);
 
     result.style.display = "block";
 
-  }, 1000);
+    message.innerText = "Analyse terminée avec succès.";
+
+  } catch (error) {
+
+    console.error(error);
+
+    message.innerText =
+      "Impossible de lire ce PDF. Essayez un autre fichier.";
+
+  }
+
+}
+
+
+function analyserInformations(text) {
+
+  const lowerText = text.toLowerCase();
+
+
+  /* Détection des compétences */
+
+  const skillsDatabase = [
+    "excel",
+    "word",
+    "powerpoint",
+    "gestion d'équipe",
+    "management",
+    "maintenance",
+    "gmao",
+    "sap",
+    "recrutement",
+    "ressources humaines",
+    "rh",
+    "logistique",
+    "finance",
+    "comptabilité",
+    "autocad",
+    "python",
+    "javascript",
+    "sql"
+  ];
+
+  let detectedSkills = [];
+
+  skillsDatabase.forEach(skill => {
+
+    if (lowerText.includes(skill)) {
+      detectedSkills.push(skill);
+    }
+
+  });
+
+  const skillsList = document.getElementById("skillsList");
+
+  skillsList.innerHTML = "";
+
+  if (detectedSkills.length === 0) {
+
+    skillsList.innerHTML = "Aucune compétence détectée automatiquement.";
+
+  } else {
+
+    detectedSkills.forEach(skill => {
+
+      const span = document.createElement("span");
+
+      span.className = "skill";
+
+      span.innerText =
+        skill.charAt(0).toUpperCase() +
+        skill.slice(1);
+
+      skillsList.appendChild(span);
+
+    });
+
+  }
+
+
+  /* Détection des langues */
+
+  let languages = [];
+
+  if (lowerText.includes("français") || lowerText.includes("francais")) {
+    languages.push("Français");
+  }
+
+  if (lowerText.includes("anglais")) {
+    languages.push("Anglais");
+  }
+
+  if (lowerText.includes("arabe")) {
+    languages.push("Arabe");
+  }
+
+  if (lowerText.includes("espagnol")) {
+    languages.push("Espagnol");
+  }
+
+  if (languages.length > 0) {
+
+    document.getElementById("languages").innerText =
+      languages.join(", ");
+
+  } else {
+
+    document.getElementById("languages").innerText =
+      "Non détectées";
+
+  }
+
+
+  /* Détection approximative de l'expérience */
+
+  const experienceMatch =
+    text.match(/(\d+)\s*(ans|années|annees)/i);
+
+  if (experienceMatch) {
+
+    document.getElementById("experience").innerText =
+      experienceMatch[1] + " années détectées";
+
+  } else {
+
+    document.getElementById("experience").innerText =
+      "À analyser";
+
+  }
+
+
+  /* Détection simple du nom */
+
+  const lines = text
+    .split("\n")
+    .map(line => line.trim())
+    .filter(line => line.length > 2);
+
+  if (lines.length > 0) {
+
+    document.getElementById("candidateName").innerText =
+      lines[0].substring(0, 50);
+
+  }
+
+
+  /* Score simple */
+
+  let score = 50;
+
+  score += detectedSkills.length * 5;
+
+  if (languages.length > 0) {
+    score += 10;
+  }
+
+  if (experienceMatch) {
+    score += 10;
+  }
+
+  if (score > 100) {
+    score = 100;
+  }
+
+  document.getElementById("score").innerText =
+    score + " / 100";
+
+
+  /* Points à vérifier */
+
+  let checks = [];
+
+  if (!experienceMatch) {
+    checks.push("Vérifier l'expérience professionnelle");
+  }
+
+  if (languages.length === 0) {
+    checks.push("Vérifier les langues parlées");
+  }
+
+  if (detectedSkills.length < 2) {
+    checks.push("Vérifier les compétences techniques");
+  }
+
+  if (checks.length === 0) {
+    checks.push("Profil contenant plusieurs informations détectables automatiquement");
+  }
+
+  document.getElementById("checks").innerHTML =
+    "• " + checks.join("<br>• ");
 
 }
 
