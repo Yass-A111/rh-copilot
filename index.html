@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>RH Copilot - Analyse intelligente des CV</title>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -235,7 +236,6 @@
     }
 
     @media (max-width: 700px) {
-
       header {
         padding: 18px 20px;
       }
@@ -257,7 +257,6 @@
         align-items: flex-start;
         gap: 12px;
       }
-
     }
   </style>
 </head>
@@ -278,6 +277,7 @@
 
   <div class="hero">
     <h1>Analyse professionnelle des candidats</h1>
+
     <p>
       Importez un CV et obtenez une analyse structurée du profil du candidat.
     </p>
@@ -291,9 +291,7 @@
 
       <h2>Importer un CV</h2>
 
-      <p>
-        Sélectionnez un CV au format PDF.
-      </p>
+      <p>Sélectionnez un CV au format PDF.</p>
 
       <input type="file" id="cvFile" accept=".pdf">
 
@@ -324,59 +322,32 @@
     <div class="analysis-grid">
 
 
-      <!-- PROFIL -->
-
       <div class="section">
 
         <h3>👤 Profil professionnel</h3>
 
         <div class="profile-item">
-
           <div class="label">Nom du candidat</div>
-
-          <div class="value" id="candidateName">
-            Non analysé
-          </div>
-
+          <div class="value" id="candidateName">Non analysé</div>
         </div>
 
-
         <div class="profile-item">
-
           <div class="label">Poste principal</div>
-
-          <div class="value" id="mainPosition">
-            Non analysé
-          </div>
-
+          <div class="value" id="mainPosition">Non analysé</div>
         </div>
 
-
         <div class="profile-item">
-
           <div class="label">Secteur d'activité</div>
-
-          <div class="value" id="industry">
-            Non analysé
-          </div>
-
+          <div class="value" id="industry">Non analysé</div>
         </div>
 
-
         <div class="profile-item">
-
           <div class="label">Expérience professionnelle</div>
-
-          <div class="value" id="experience">
-            Non analysée
-          </div>
-
+          <div class="value" id="experience">Non analysée</div>
         </div>
 
       </div>
 
-
-      <!-- SCORE -->
 
       <div class="section score-box">
 
@@ -393,90 +364,65 @@
       </div>
 
 
-      <!-- COMPETENCES -->
-
       <div class="section">
 
         <h3>🧠 Compétences principales</h3>
 
         <div class="skills-list" id="skillsList">
-
-          <span class="skill">
-            Analyse en attente
-          </span>
-
+          <span class="skill">Analyse en attente</span>
         </div>
 
       </div>
 
-
-      <!-- LANGUES -->
 
       <div class="section">
 
         <h3>🌐 Langues</h3>
 
         <ul class="list" id="languages">
-
           <li>Analyse en attente</li>
-
         </ul>
 
       </div>
 
-
-      <!-- RESUME -->
 
       <div class="section full">
 
         <h3>📝 Résumé professionnel</h3>
 
         <p class="summary" id="summary">
-
           L'analyse du parcours professionnel sera affichée ici.
-
         </p>
 
       </div>
 
-
-      <!-- POINTS FORTS -->
 
       <div class="section">
 
         <h3>⭐ Points forts</h3>
 
         <ul class="list" id="strengths">
-
           <li>Analyse en attente</li>
-
         </ul>
 
       </div>
 
-
-      <!-- POINTS A VERIFIER -->
 
       <div class="section">
 
         <h3>⚠️ Points à vérifier</h3>
 
         <ul class="list" id="checks">
-
           <li>Analyse en attente</li>
-
         </ul>
 
       </div>
-
 
     </div>
 
 
     <div class="footer-note">
-
       RH Copilot • Analyse assistée par intelligence artificielle
-
     </div>
 
   </div>
@@ -497,28 +443,23 @@ async function analyserCV() {
 
   if (!file) {
 
-    message.innerText =
-      "Veuillez sélectionner un CV PDF.";
+    message.innerText = "Veuillez sélectionner un CV PDF.";
 
     return;
 
   }
 
 
-  message.innerText =
-    "Lecture et préparation du CV...";
+  message.innerText = "Lecture du CV en cours...";
 
 
   try {
 
-    const arrayBuffer =
-      await file.arrayBuffer();
+    const arrayBuffer = await file.arrayBuffer();
 
-
-    const pdf =
-      await pdfjsLib.getDocument({
-        data: arrayBuffer
-      }).promise;
+    const pdf = await pdfjsLib.getDocument({
+      data: arrayBuffer
+    }).promise;
 
 
     let fullText = "";
@@ -530,44 +471,42 @@ async function analyserCV() {
       pageNumber++
     ) {
 
-      const page =
-        await pdf.getPage(pageNumber);
+      const page = await pdf.getPage(pageNumber);
 
+      const content = await page.getTextContent();
 
-      const content =
-        await page.getTextContent();
+      const pageText = content.items
+        .map(item => item.str)
+        .join(" ");
 
-
-      const pageText =
-        content.items
-          .map(item => item.str)
-          .join(" ");
-
-
-      fullText +=
-        pageText + "\n\n";
+      fullText += pageText + "\n\n";
 
     }
 
 
-    analyserInformations(fullText);
+    if (fullText.trim().length === 0) {
 
+      throw new Error("Aucun texte détecté dans le PDF");
 
-    result.style.display =
-      "block";
+    }
 
 
     message.innerText =
-      "Analyse terminée.";
+      "Envoi du CV au moteur d'analyse...";
+
+
+    await analyserInformations(fullText);
+
+
+    result.style.display = "block";
 
 
   } catch (error) {
 
     console.error(error);
 
-
     message.innerText =
-      "Impossible de lire ce PDF.";
+      "Impossible de lire ou d'analyser ce PDF. Essayez un CV PDF contenant du texte.";
 
   }
 
@@ -575,356 +514,200 @@ async function analyserCV() {
 
 
 
-function analyserInformations(text) {
+async function analyserInformations(text) {
 
-  const lowerText =
-    text.toLowerCase();
-
-
-  /* NOM - temporaire */
-
-  document.getElementById(
-    "candidateName"
-  ).innerText =
-    "À identifier par IA";
+  const message = document.getElementById("message");
 
 
-  /* POSTE - temporaire */
+  try {
 
-  let mainPosition =
-    "À identifier par IA";
-
-
-  const positions = [
-
-    "superviseur hse",
-
-    "responsable hse",
-
-    "responsable qhse",
-
-    "ingénieur hse",
-
-    "technicien hse",
-
-    "responsable rh",
-
-    "chargé rh",
-
-    "responsable maintenance",
-
-    "technicien maintenance",
-
-    "chef de projet",
-
-    "responsable logistique",
-
-    "comptable"
-
-  ];
+    message.innerText =
+      "Analyse intelligente du CV en cours...";
 
 
-  for (let position of positions) {
+    const response = await fetch(
+      "/api/analyse-cv",
+      {
 
-    if (
-      lowerText.includes(position)
-    ) {
+        method: "POST",
 
-      mainPosition =
-        position
-          .replace(
-            /\b\w/g,
-            l => l.toUpperCase()
-          );
+        headers: {
+          "Content-Type": "application/json"
+        },
 
-      break;
+        body: JSON.stringify({
+          text: text
+        })
+
+      }
+    );
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        "Erreur lors de la communication avec le serveur"
+      );
 
     }
 
-  }
+
+    const data = await response.json();
+
+    console.log(data);
 
 
-  document.getElementById(
-    "mainPosition"
-  ).innerText =
-    mainPosition;
+    document.getElementById("candidateName").innerText =
+      data.analysis.candidateName;
+
+    document.getElementById("mainPosition").innerText =
+      data.analysis.mainPosition;
+
+    document.getElementById("industry").innerText =
+      data.analysis.industry;
+
+    document.getElementById("experience").innerText =
+      data.analysis.experience;
+
+    document.getElementById("summary").innerText =
+      data.analysis.summary;
 
 
-  /* SECTEUR */
+    /* COMPÉTENCES */
 
-  let industry =
-    "À identifier par IA";
+    const skillsList =
+      document.getElementById("skillsList");
 
-
-  if (
-    lowerText.includes("hse") ||
-    lowerText.includes("sécurité") ||
-    lowerText.includes("securite")
-  ) {
-
-    industry =
-      "Santé, Sécurité et Environnement";
-
-  }
+    skillsList.innerHTML = "";
 
 
-  document.getElementById(
-    "industry"
-  ).innerText =
-    industry;
+    if (data.analysis.skills.length === 0) {
 
+      skillsList.innerHTML =
+        "<span class='skill'>Analyse en attente</span>";
 
-  /* EXPERIENCE */
+    } else {
 
-  document.getElementById(
-    "experience"
-  ).innerText =
-    "À analyser par IA";
+      data.analysis.skills.forEach(skill => {
 
+        const span =
+          document.createElement("span");
 
-  /* COMPETENCES */
+        span.className = "skill";
 
-  const skillsDatabase = [
+        span.innerText = skill;
 
-    "gestion des risques",
+        skillsList.appendChild(span);
 
-    "analyse des risques",
-
-    "audit",
-
-    "sécurité",
-
-    "securite",
-
-    "hse",
-
-    "qhse",
-
-    "iso 45001",
-
-    "iso 14001",
-
-    "formation",
-
-    "management",
-
-    "gestion d'équipe",
-
-    "excel",
-
-    "maintenance",
-
-    "gmao"
-
-  ];
-
-
-  let detectedSkills = [];
-
-
-  skillsDatabase.forEach(skill => {
-
-    if (
-      lowerText.includes(skill)
-    ) {
-
-      detectedSkills.push(skill);
+      });
 
     }
 
-  });
+
+    /* LANGUES */
+
+    const languagesList =
+      document.getElementById("languages");
+
+    languagesList.innerHTML = "";
 
 
-  const skillsList =
-    document.getElementById(
-      "skillsList"
-    );
+    if (data.analysis.languages.length === 0) {
+
+      languagesList.innerHTML =
+        "<li>Analyse en attente</li>";
+
+    } else {
+
+      data.analysis.languages.forEach(language => {
+
+        const li =
+          document.createElement("li");
+
+        li.innerText = language;
+
+        languagesList.appendChild(li);
+
+      });
+
+    }
 
 
-  skillsList.innerHTML = "";
+    /* POINTS FORTS */
+
+    const strengths =
+      document.getElementById("strengths");
+
+    strengths.innerHTML = "";
 
 
-  if (
-    detectedSkills.length === 0
-  ) {
+    if (data.analysis.strengths.length === 0) {
 
-    skillsList.innerHTML =
-      "<span class='skill'>À analyser par IA</span>";
+      strengths.innerHTML =
+        "<li>Analyse en attente</li>";
 
-  } else {
+    } else {
 
-    detectedSkills.forEach(skill => {
+      data.analysis.strengths.forEach(strength => {
 
-      const span =
-        document.createElement(
-          "span"
-        );
+        const li =
+          document.createElement("li");
 
+        li.innerText = strength;
 
-      span.className =
-        "skill";
+        strengths.appendChild(li);
 
+      });
 
-      span.innerText =
-        skill
-          .replace(
-            /\b\w/g,
-            l => l.toUpperCase()
-          );
+    }
 
 
-      skillsList.appendChild(
-        span
-      );
+    /* POINTS À VÉRIFIER */
 
-    });
+    const checks =
+      document.getElementById("checks");
 
-  }
-
-
-  /* LANGUES */
-
-  let languages = [];
+    checks.innerHTML = "";
 
 
-  if (
-    lowerText.includes("français") ||
-    lowerText.includes("francais")
-  ) {
+    if (data.analysis.checks.length === 0) {
 
-    languages.push(
-      "Français"
-    );
+      checks.innerHTML =
+        "<li>Aucun point particulier détecté</li>";
 
-  }
+    } else {
 
+      data.analysis.checks.forEach(check => {
 
-  if (
-    lowerText.includes("anglais")
-  ) {
+        const li =
+          document.createElement("li");
 
-    languages.push(
-      "Anglais"
-    );
+        li.innerText = check;
 
-  }
+        checks.appendChild(li);
+
+      });
+
+    }
 
 
-  if (
-    lowerText.includes("arabe")
-  ) {
+    /* SCORE */
 
-    languages.push(
-      "Arabe"
-    );
-
-  }
+    document.getElementById("score").innerText =
+      "IA";
 
 
-  const languagesList =
-    document.getElementById(
-      "languages"
-    );
+    message.innerText =
+      "Analyse terminée avec succès.";
 
 
-  languagesList.innerHTML = "";
+  } catch (error) {
 
+    console.error(error);
 
-  if (
-    languages.length === 0
-  ) {
-
-    languagesList.innerHTML =
-      "<li>À identifier par IA</li>";
-
-  } else {
-
-    languages.forEach(language => {
-
-      const li =
-        document.createElement(
-          "li"
-        );
-
-
-      li.innerText =
-        language;
-
-
-      languagesList.appendChild(
-        li
-      );
-
-    });
+    throw error;
 
   }
-
-
-  /* RESUME */
-
-  document.getElementById(
-    "summary"
-  ).innerText =
-    "Le résumé professionnel détaillé sera généré automatiquement par l'intelligence artificielle après analyse complète du parcours du candidat.";
-
-
-  /* POINTS FORTS */
-
-  document.getElementById(
-    "strengths"
-  ).innerHTML =
-    "<li>Compétences à analyser par IA</li>" +
-    "<li>Expérience professionnelle à analyser</li>" +
-    "<li>Responsabilités à identifier</li>";
-
-
-  /* POINTS A VERIFIER */
-
-  document.getElementById(
-    "checks"
-  ).innerHTML =
-    "<li>Disponibilité du candidat</li>" +
-    "<li>Mobilité géographique</li>" +
-    "<li>Prétentions salariales</li>";
-
-
-  /* SCORE */
-
-  let score = 50;
-
-
-  if (
-    detectedSkills.length > 0
-  ) {
-
-    score +=
-      detectedSkills.length * 3;
-
-  }
-
-
-  if (
-    languages.length > 0
-  ) {
-
-    score += 10;
-
-  }
-
-
-  if (
-    score > 100
-  ) {
-
-    score = 100;
-
-  }
-
-
-  document.getElementById(
-    "score"
-  ).innerText =
-    score + "/100";
 
 }
 
